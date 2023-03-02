@@ -102,8 +102,8 @@ export default function NftDetail({
                             Information
                           </h3>
                           <dl className="mt-2 divide-y divide-gray-200 border-t border-b border-gray-200">
-                            {metadata.attributes?.map((attr) => (
-                              <div className="flex justify-between py-3 text-sm font-medium">
+                            {metadata.attributes?.map((attr, index) => (
+                              <div className="flex justify-between py-3 text-sm font-medium" key={index}>
                                 <dt className="text-gray-500">
                                   {attr.trait_type}
                                 </dt>
@@ -130,7 +130,7 @@ export default function NftDetail({
                           role="list"
                           className="mt-2 divide-y divide-gray-200 border-t border-b border-gray-200"
                         >
-                          <li className="flex items-center justify-between py-3">
+                          <li className="flex items-center justify-between py-3" key={'owner'}>
                             <div className="flex items-center">
                               <p className="ml-4 text-sm font-medium text-gray-900">
                                 {getEllipsisTxt(nft.owner_of)}

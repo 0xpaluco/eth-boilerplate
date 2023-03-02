@@ -13,6 +13,9 @@
   #__next {
       @apply h-full;
   }
+  [data-rk] {
+    @apply h-full;
+}
   html,
   body {
       @apply h-full;

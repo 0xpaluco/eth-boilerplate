@@ -4,11 +4,15 @@ import "@src/styles/globals.css";
 import { useEffect } from "react";
 import { AppPropsWithLayout } from "@lib/types";
 
+import WithLayout, { MainLayout } from "@src/layouts";
+import { AuthView } from "@src/views";
+
+
 import { createClient, configureChains, WagmiConfig } from "wagmi";
 import { polygon, polygonMumbai, localhost } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 
 import {
   RainbowKitSiweNextAuthProvider,
@@ -81,26 +85,30 @@ interface AuthProps {
   children: any;
 }
 function Auth({ children }: AuthProps) {
-  // const { status } = useSession({ required: true })
-  // const isLoading = status === "loading";
-  // const isAuthenticated = status === "authenticated";
+  const { status } = useSession()
+  const isLoading = status === "loading";
+  const isAuthenticated = status === "authenticated";
+  const isUnAuthenticated = status === "unauthenticated";
 
-  // // useEffect(() => {
-  // //   console.log(`isAuthenticated: ${isAuthenticated}`);
-  // //   console.log(`isLoading: ${isLoading}`);
-  // // },[isLoading, isAuthenticated])
+  useEffect(() => {
+    console.log(`isAuthenticated: ${isAuthenticated}`);
+    console.log(`isLoading: ${isLoading}`);
+  },[isLoading, isAuthenticated])
 
-  // if (isLoading) {
-  //   return <div>Authenticating...</div>
-  // }
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
-  // if (isAuthenticated) {
-  //   return children;
-  // }
+  if (isUnAuthenticated) {
+    return <WithLayout layout={MainLayout} component={<AuthView/>} /> 
+  }
 
-  // // Session is being fetched, or no user.
-  // // If no user, useEffect() will redirect.
+  if (isAuthenticated) {
+    return children;
+  }
+
+  // Session is being fetched, or no user.
+  // If no user, useEffect() will redirect.
   // return <AuthView />
-
-  return children;
+  return <h2>Connect Wallet</h2>
 }

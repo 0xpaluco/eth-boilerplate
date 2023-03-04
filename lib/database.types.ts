@@ -132,21 +132,53 @@ export interface Database {
   }
   public: {
     Tables: {
+      collections: {
+        Row: {
+          id: number
+          name: string
+          slug: string
+          owner_address: string
+          created_at: string | null
+          draft: boolean
+          description: string | null
+          thumbnail: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: number
+          name: string
+          slug: string
+          owner_address: string
+          created_at?: string | null
+          draft?: boolean
+          description?: string | null
+          thumbnail?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string
+          slug?: string
+          owner_address?: string
+          created_at?: string | null
+          draft?: boolean
+          description?: string | null
+          thumbnail?: string | null
+          user_id?: string | null
+        }
+      }
       users: {
         Row: {
-          created_at: string | null
           id: string
           moralis_provider_id: string | null
           metadata: Json | null
         }
         Insert: {
-          created_at?: string | null
           id: string
           moralis_provider_id?: string | null
           metadata?: Json | null
         }
         Update: {
-          created_at?: string | null
           id?: string
           moralis_provider_id?: string | null
           metadata?: Json | null
@@ -164,3 +196,4 @@ export interface Database {
     }
   }
 }
+

@@ -28,6 +28,7 @@ declare module "next-auth" {
     // A JWT which can be used as Authorization header with supabase-js for RLS.
     supabaseAccessToken?: string
     user: User
+    user_id: string
   }
 }
 
@@ -51,5 +52,6 @@ declare module "next-auth/jwt" {
     /** OpenID ID Token */
     user: User,
     supabaseAccessToken?: string
+    user_id: string
   }
 }

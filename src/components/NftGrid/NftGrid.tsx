@@ -20,7 +20,7 @@ export default function NftGrid({ nftList }: NftGridProps) {
   }
 
   return (
-    <div className="bg-white">
+    <div>
       <div className="mx-auto max-w-7xl overflow-hidden sm:px-6 lg:px-8">
         <h2 className="sr-only">Products</h2>
 
@@ -28,7 +28,7 @@ export default function NftGrid({ nftList }: NftGridProps) {
           {nftList?.map((_nft, index) => (
             <div
               key={index}
-              className="group relative border-r border-b border-gray-200 p-4 sm:p-6"
+              className="group relative border-r border-b border-gray-200 p-4 sm:p-6 bg-white"
             >
               <div className="aspect-w-1 aspect-h-1 h-1/2 overflow-hidden rounded-lg bg-gray-800 group-hover:opacity-75">
                 <img

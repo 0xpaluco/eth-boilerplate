@@ -49,6 +49,7 @@ export const authOptions: NextAuthOptions = {
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
             sub: savedUser,
           }
+          token.user_id = savedUser
           token.supabaseAccessToken = jwt.sign(payload, signingSecret)
         }
       }
@@ -57,6 +58,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {      
       session.user = (token.user as User);
       session.supabaseAccessToken = token.supabaseAccessToken;
+      session.user_id = token.user_id;
       return session;
     },
   },

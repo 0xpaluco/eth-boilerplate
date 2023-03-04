@@ -7,7 +7,6 @@ import { AppPropsWithLayout } from "@lib/types";
 import WithLayout, { MainLayout } from "@src/layouts";
 import { AuthView } from "@src/views";
 
-
 import { createClient, configureChains, WagmiConfig } from "wagmi";
 import { polygon, polygonMumbai, localhost } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
@@ -22,9 +21,10 @@ import {
   getDefaultWallets,
   RainbowKitProvider,
   darkTheme,
-  lightTheme
+  lightTheme,
 } from "@rainbow-me/rainbowkit";
 
+import { Toaster } from "react-hot-toast";
 
 const { provider, webSocketProvider, chains } = configureChains(
   [polygon, polygonMumbai, localhost],
@@ -45,11 +45,10 @@ const client = createClient({
 
 const getSiweMessageOptions: GetSiweMessageOptions = () => ({
   domain: process.env.NEXT_PUBLIC_APP_DOMAIN!,
-  statement: 'Please sign this message to confirm your identity.',
+  statement: "Please sign this message to confirm your identity.",
   uri: process.env.NEXT_PUBLIC_NEXTAUTH_URL!,
-  timeout: 60
-})
-
+  timeout: 60,
+});
 
 export default function App({
   Component,
@@ -59,25 +58,29 @@ export default function App({
   const getLayout = Component.getLayout ?? ((page) => page);
 
   return (
-    <WagmiConfig client={client}>
-      <SessionProvider session={session} refetchInterval={0}>
-        <RainbowKitSiweNextAuthProvider
-          getSiweMessageOptions={getSiweMessageOptions} enabled={false} 
-        >
-          <RainbowKitProvider
-            chains={chains}
-            modalSize="compact"
-            theme={lightTheme()}
+    <>
+      <WagmiConfig client={client}>
+        <SessionProvider session={session} refetchInterval={0}>
+          <RainbowKitSiweNextAuthProvider
+            getSiweMessageOptions={getSiweMessageOptions}
+            enabled={false}
           >
-            {Component.auth ? (
-              <Auth>{getLayout(<Component {...pageProps} />)}</Auth>
-            ) : (
-              getLayout(<Component {...pageProps} />)
-            )}
-          </RainbowKitProvider>
-        </RainbowKitSiweNextAuthProvider>
-      </SessionProvider>
-    </WagmiConfig>
+            <RainbowKitProvider
+              chains={chains}
+              modalSize="compact"
+              theme={lightTheme()}
+            >
+              {Component.auth ? (
+                <Auth>{getLayout(<Component {...pageProps} />)}</Auth>
+              ) : (
+                getLayout(<Component {...pageProps} />)
+              )}
+            </RainbowKitProvider>
+          </RainbowKitSiweNextAuthProvider>
+        </SessionProvider>
+      </WagmiConfig>
+      <Toaster />
+    </>
   );
 }
 
@@ -85,7 +88,7 @@ interface AuthProps {
   children: any;
 }
 function Auth({ children }: AuthProps) {
-  const { status } = useSession()
+  const { status } = useSession();
   const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated";
   const isUnAuthenticated = status === "unauthenticated";
@@ -93,14 +96,14 @@ function Auth({ children }: AuthProps) {
   useEffect(() => {
     console.log(`isAuthenticated: ${isAuthenticated}`);
     console.log(`isLoading: ${isLoading}`);
-  },[isLoading, isAuthenticated])
+  }, [isLoading, isAuthenticated]);
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   if (isUnAuthenticated) {
-    return <WithLayout layout={MainLayout} component={<AuthView/>} /> 
+    return <WithLayout layout={MainLayout} component={<AuthView />} />;
   }
 
   if (isAuthenticated) {
@@ -110,5 +113,5 @@ function Auth({ children }: AuthProps) {
   // Session is being fetched, or no user.
   // If no user, useEffect() will redirect.
   // return <AuthView />
-  return <h2>Connect Wallet</h2>
+  return <h2>Connect Wallet</h2>;
 }

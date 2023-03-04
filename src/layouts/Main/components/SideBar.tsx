@@ -35,7 +35,7 @@ export const SideBar = ({ navigation }: SideBarProps) => {
                                     'h-6 w-6'
                                 )}
                                 aria-hidden="true" />
-                            <span className="mt-2">{item.name}</span>
+                            <span className="mt-2 text-center">{item.name}</span>
                         </Link>
                     ))}
                 </div>

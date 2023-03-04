@@ -1,18 +1,18 @@
 import { ReactNode, useState, ForwardRefExoticComponent, SVGProps } from 'react'
 import {
     HomeIcon,
-    Squares2X2Icon,
     UserGroupIcon,
-    ArrowUpIcon,
-    UserIcon
+    UserIcon,
+    BuildingStorefrontIcon,
+    MusicalNoteIcon
 } from '@heroicons/react/24/outline'
 import { SideBar, Header, MobileMenu, } from './components/index'
 
 const sidebarNavigation = [
     { name: 'Home', href: '/', icon: HomeIcon, current: currentPage },
-    { name: 'Marketplace', href: '/marketplace', icon: Squares2X2Icon, current: currentPage },
+    { name: 'Marketplace', href: '/marketplace', icon: BuildingStorefrontIcon, current: currentPage },
     { name: 'Community', href: '/community', icon: UserGroupIcon, current: currentPage },
-    { name: 'Create', href: '/create', icon: ArrowUpIcon, current: currentPage },
+    { name: 'My Collections', href: '/collections', icon: MusicalNoteIcon, current: currentPage },
     { name: 'My Profile', href: '/profile', icon: UserIcon, current: currentPage },
     
 ]

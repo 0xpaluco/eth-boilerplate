@@ -1,14 +1,16 @@
-import { Dispatch, Fragment, SetStateAction, useState } from "react";
+import { Dispatch, Fragment, SetStateAction } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { PlayIcon } from "@heroicons/react/20/solid";
-import { Metadata, Nft } from "@lib/types/web3";
+import { Metadata } from "@lib/types/web3";
+import { resolveIPFS } from "@src/utils/resolveIPFS";
 import { getEllipsisTxt } from "@src/utils/format";
+import { EvmNft } from "@moralisweb3/common-evm-utils";
 
 interface NftDetailProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  nft: Nft;
+  nft: EvmNft;
   metadata: Metadata;
 }
 
@@ -71,7 +73,7 @@ export default function NftDetail({
                       <div>
                         <div className="aspect-w-10 aspect-h-7 block w-full overflow-hidden rounded-lg">
                           <img
-                            src={metadata.image}
+                            src={resolveIPFS(metadata.image)}
                             alt=""
                             className="object-cover w-full"
                           />
@@ -133,7 +135,7 @@ export default function NftDetail({
                           <li className="flex items-center justify-between py-3" key={'owner'}>
                             <div className="flex items-center">
                               <p className="ml-4 text-sm font-medium text-gray-900">
-                                {getEllipsisTxt(nft.owner_of)}
+                                {getEllipsisTxt(nft.ownerOf?.format("checksum"))}
                               </p>
                             </div>
                           </li>

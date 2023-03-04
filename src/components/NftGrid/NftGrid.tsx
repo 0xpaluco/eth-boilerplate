@@ -1,19 +1,20 @@
-import { Nft } from "@lib/types/web3";
+import { Metadata, Nft } from "@lib/types/web3";
+import { EvmNft } from "@moralisweb3/common-evm-utils";
 import { resolveIPFS } from "@src/utils/resolveIPFS";
 import { useState } from "react";
 import NftDetail from "../NftDetail";
 
 interface NftGridProps {
-  nftList?: Nft[];
+  nftList?: EvmNft[];
 }
 
 export default function NftGrid({ nftList }: NftGridProps) {
 
   const [open, setOpen] = useState(false);
-  const [nft, setNft] = useState<Nft | undefined>(nftList ? nftList[0] : undefined);
+  const [nft, setNft] = useState<EvmNft | undefined>(nftList ? nftList[0] : undefined);
 
 
-  async function setDetail(_nft: Nft) {
+  async function setDetail(_nft: EvmNft) {
     setNft(_nft)
     setOpen(true)
   }
@@ -32,9 +33,7 @@ export default function NftGrid({ nftList }: NftGridProps) {
               <div className="aspect-w-1 aspect-h-1 h-1/2 overflow-hidden rounded-lg bg-gray-800 group-hover:opacity-75">
                 <img
                   src={
-                    JSON.parse(_nft.metadata)
-                      ? resolveIPFS(JSON.parse(_nft.metadata).image)
-                      : ""
+                    resolveIPFS((_nft.metadata as unknown as Metadata).image)
                   }
                   alt={""}
                   className="h-full w-full object-cover object-center align-middle"
@@ -44,7 +43,7 @@ export default function NftGrid({ nftList }: NftGridProps) {
                 <h3 className="text-sm font-medium text-gray-900">
                   <button onClick={() => setDetail(_nft)}>
                     <span aria-hidden="true" className="absolute inset-0" />
-                    {JSON.parse(_nft.metadata).name}  
+                    {(_nft.metadata as unknown as Metadata).name}  
                   </button>
                 </h3>
                 <div className="mt-1 flex flex-col items-center">
@@ -60,7 +59,7 @@ export default function NftGrid({ nftList }: NftGridProps) {
         </div>
 
         {nft && (
-            <NftDetail open={open} setOpen={setOpen} nft={nft} metadata={JSON.parse(nft.metadata)}/>
+            <NftDetail open={open} setOpen={setOpen} nft={nft} metadata={(nft.metadata as unknown as Metadata)}/>
         )}
         
       </div>

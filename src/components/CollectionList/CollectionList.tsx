@@ -8,9 +8,11 @@ import { Database } from "@lib/database.types";
 import Link from "next/link";
 type Collections = Database["public"]["Tables"]["collections"]["Row"];
 
+interface CollectionListProps {
+  address?: string
+}
 
-
-export default function CollectionList() {
+export default function CollectionList({ address }:CollectionListProps) {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ export default function CollectionList() {
       let { data, error, status } = await supabase
         .from("collections")
         .select(`*`)
-        .eq("owner_address", session.user.address);
+        .eq("owner_address", address);
 
       if (error && status !== 406) {
         throw error;

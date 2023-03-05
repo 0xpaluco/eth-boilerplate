@@ -134,37 +134,84 @@ export interface Database {
     Tables: {
       collections: {
         Row: {
-          id: number
-          name: string
-          slug: string
-          owner_address: string
-          created_at: string | null
-          draft: boolean
+          name: string | null
+          slug: string | null
           description: string | null
-          thumbnail: string | null
+          owner_address: string | null
+          thumbnail_url: string | null
+          banner_url: string | null
+          created_at: string | null
+          updated_at: string | null
+          draft: boolean
+          id: number
           user_id: string | null
         }
         Insert: {
-          id?: number
-          name: string
-          slug: string
-          owner_address: string
-          created_at?: string | null
-          draft?: boolean
+          name?: string | null
+          slug?: string | null
           description?: string | null
-          thumbnail?: string | null
+          owner_address?: string | null
+          thumbnail_url?: string | null
+          banner_url?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          draft?: boolean
+          id?: number
           user_id?: string | null
         }
         Update: {
-          id?: number
-          name?: string
-          slug?: string
-          owner_address?: string
-          created_at?: string | null
-          draft?: boolean
+          name?: string | null
+          slug?: string | null
           description?: string | null
-          thumbnail?: string | null
+          owner_address?: string | null
+          thumbnail_url?: string | null
+          banner_url?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+          draft?: boolean
+          id?: number
           user_id?: string | null
+        }
+      }
+      stems: {
+        Row: {
+          created_at: string | null
+          updated_at: string | null
+          id: number
+          collection_id: number
+          token_id: number | null
+          name: string | null
+          description: string | null
+          image_hash: string | null
+          audio_hash: string | null
+          supply: number | null
+          price: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          updated_at?: string | null
+          id?: number
+          collection_id: number
+          token_id?: number | null
+          name?: string | null
+          description?: string | null
+          image_hash?: string | null
+          audio_hash?: string | null
+          supply?: number | null
+          price?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          updated_at?: string | null
+          id?: number
+          collection_id?: number
+          token_id?: number | null
+          name?: string | null
+          description?: string | null
+          image_hash?: string | null
+          audio_hash?: string | null
+          supply?: number | null
+          price?: number | null
         }
       }
       users: {

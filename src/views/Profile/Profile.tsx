@@ -125,7 +125,7 @@ const ProfileView = ({ address }: ProfileProps) => {
         </div>
       </div>
 
-      <div className="mt-4 mx-auto">
+      <div className="mt-4">
         <NftGrid nftList={nftList} />
       </div>
     </>

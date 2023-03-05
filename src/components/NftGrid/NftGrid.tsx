@@ -30,7 +30,7 @@ export default function NftGrid({ nftList }: NftGridProps) {
               key={index}
               className="group relative border-r border-b border-gray-200 p-4 sm:p-6 bg-white"
             >
-              <div className="aspect-w-1 aspect-h-1 h-1/2 overflow-hidden rounded-lg bg-gray-800 group-hover:opacity-75">
+              <div className="aspect-w-1 aspect-h-1 overflow-hidden rounded-lg bg-gray-800 group-hover:opacity-75">
                 <img
                   src={
                     resolveIPFS((_nft.metadata as unknown as Metadata).image)

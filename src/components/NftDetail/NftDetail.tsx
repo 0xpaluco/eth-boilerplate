@@ -71,7 +71,7 @@ export default function NftDetail({
                   <div className="h-full overflow-y-auto bg-white p-8">
                     <div className="space-y-6 pb-16">
                       <div>
-                        <div className="aspect-w-10 aspect-h-7 block w-full overflow-hidden rounded-lg">
+                        <div className="aspect-w-1 aspect-h-1 block w-full overflow-hidden rounded-lg">
                           <img
                             src={resolveIPFS(metadata.image)}
                             alt=""

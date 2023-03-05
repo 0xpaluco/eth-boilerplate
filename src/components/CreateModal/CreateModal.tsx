@@ -32,22 +32,22 @@ export default function CreateModal({ open, setOpen }: CreateModalProps) {
   const [slug, setSlug] = useState<Collections["slug"]>("");
   const [description, setDescription] =
     useState<Collections["description"]>("");
-  const [thumbnail, setThumbnail] = useState<Collections["thumbnail"]>(null);
+  const [thumbnail_url, setThumbnail_url] = useState<Collections["thumbnail_url"]>(null);
 
   async function createCollection({
     name,
     description,
-    thumbnail,
+    thumbnail_url,
   }: {
     name: Collections["name"];
     description: Collections["description"];
-    thumbnail: Collections["thumbnail"];
+    thumbnail_url: Collections["thumbnail_url"];
   }) {
     try {
       setLoading(true);
       if (!session?.user) throw new Error("No user");
 
-      if(name.length == 0){
+      if(!name){
         toast.error("At least give us a name!");
         return
       }
@@ -58,10 +58,10 @@ export default function CreateModal({ open, setOpen }: CreateModalProps) {
         slug: kebabCase(name),
         name,
         description,
-        thumbnail,
+        thumbnail_url,
       };
 
-      let { error, data } = await supabase.from("collections").upsert(updates);
+      let { error, data } = await supabase.from("collections").insert(updates).select();
       console.log(data);
       if (error) throw error;
 
@@ -228,7 +228,7 @@ export default function CreateModal({ open, setOpen }: CreateModalProps) {
                                 createCollection({
                                   name,
                                   description,
-                                  thumbnail,
+                                  thumbnail_url,
                                 })
                               }
                               disabled={loading}

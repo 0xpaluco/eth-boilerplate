@@ -1,6 +1,20 @@
+import { create } from 'ipfs-http-client'
+import { Buffer } from 'buffer'
+
 export const resolveIPFS = (url?: string) => {
     if (!url || !url.includes('ipfs://')) {
       return url;
     }
     return url.replace('ipfs://', 'https://gateway.ipfs.io/ipfs/');
   };
+
+  const auth = 'Basic ' + Buffer.from(process.env.INFURA_PROJECT_ID + ':' + process.env.INFURA_KEY_SECRET).toString('base64')
+
+  export const ipfsClient = create({
+    host: 'ipfs.infura.io',
+    port: 5001,
+    protocol: 'https',
+    headers: {
+        authorization: auth,
+    },
+  })

@@ -177,6 +177,11 @@ export interface Database {
         Row: {
           created_at: string | null
           updated_at: string | null
+          instrument: string | null
+          bpm: number | null
+          key: string | null
+          genre: string | null
+          license: string | null
           id: number
           collection_id: number
           token_id: number | null
@@ -190,6 +195,11 @@ export interface Database {
         Insert: {
           created_at?: string | null
           updated_at?: string | null
+          instrument?: string | null
+          bpm?: number | null
+          key?: string | null
+          genre?: string | null
+          license?: string | null
           id?: number
           collection_id: number
           token_id?: number | null
@@ -203,6 +213,11 @@ export interface Database {
         Update: {
           created_at?: string | null
           updated_at?: string | null
+          instrument?: string | null
+          bpm?: number | null
+          key?: string | null
+          genre?: string | null
+          license?: string | null
           id?: number
           collection_id?: number
           token_id?: number | null

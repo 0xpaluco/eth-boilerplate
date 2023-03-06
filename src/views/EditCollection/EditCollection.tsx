@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 
 import { Database } from "@lib/database.types";
 import { toast } from "react-hot-toast";
-import Image from "next/image";
 import { kebabCase } from "lodash";
-import { StemList } from "@src/components";
+import { IPFSUpload, StemList } from "@src/components";
 type Collection = Database["public"]["Tables"]["collections"]["Row"];
+type Stem = Database["public"]["Tables"]["stems"]["Row"];
 
 interface EditCollectionViewProps {
   collectionId?: string | string[];
@@ -27,11 +27,11 @@ export default function EditCollectionView({
   const [name, setName] = useState<Collection["name"]>("");
   const [description, setDescription] =
     useState<Collection["description"]>(null);
-  const [thumbnail, setThumbnail] =
-    useState<Collection["thumbnail_url"]>(null);
+  const [thumbnail, setThumbnail] = useState<Collection["thumbnail_url"]>(null);
   const [banner, setBanner] = useState<Collection["banner_url"]>(null);
   const [draft, setDraft] = useState<Collection["draft"]>();
 
+  const [stems, setStems] = useState<Stem[]>();
   useEffect(() => {
     getCollection();
     console.log(collectionId);
@@ -58,6 +58,7 @@ export default function EditCollectionView({
         setName(data.name);
         setDescription(data.description);
         setThumbnail(data.thumbnail_url);
+        setBanner(data.banner_url);
       }
     } catch (error) {
       toast.error("Error Loading Collection");
@@ -109,6 +110,54 @@ export default function EditCollectionView({
     } finally {
       setLoading(false);
     }
+  }
+
+  const [metadata, setMetadata] = useState<any[]>();
+  
+  async function generateMetadata(_collection: Collection, _stems: Stem[]) {
+    const abi: any[] = new Array<any>()
+    const meta = { path: "metadata.json", content: { name: _collection.name, description: _collection.description, image: _collection.thumbnail_url } }
+    abi.push(meta)
+
+    console.log(_stems.length);
+    
+    for (let i = 0; i < _stems.length; i++) {
+      const stem = _stems[i];
+      let stemMeta = {
+        path: `${stem.token_id}.json`,
+        content: {
+          id: stem.token_id,
+          name: stem.name,
+          description: stem.description,
+          image: stem.image_hash,
+          animation_url: stem.audio_hash,
+          attributes: [
+            {
+              "trait_type": "Instrument",
+              "value": stem.instrument
+            },
+            {
+              "trait_type": "BPM",
+              "value": stem.bpm
+            },
+            {
+              "trait_type": "Key",
+              "value": stem.key
+            },
+            {
+              "trait_type": "Genre",
+              "value": stem.genre
+            },
+            {
+              "trait_type": "License",
+              "value": stem.license
+            }
+          ]
+        }
+      }
+      abi.push(stemMeta)
+    }
+    setMetadata(abi)
   }
 
   return (
@@ -175,10 +224,11 @@ export default function EditCollectionView({
                     </p>
                   </div>
 
-                  <ThumbnailUpload
-                    uid={collection?.id}
-                    url={thumbnail}
-                    size={128}
+                  <IPFSUpload
+                    label={"Thumbnail"}
+                    name="thumbnail"
+                    fileType="image/*"
+                    ipfsUrl={thumbnail}
                     onUpload={(url) => {
                       setThumbnail(url);
                       updateCollection({
@@ -190,17 +240,18 @@ export default function EditCollectionView({
                     }}
                   />
 
-                  <BannerUpload
-                    uid={collection?.id}
-                    url={banner}
-                    size={128}
+                  <IPFSUpload
+                    label={"Banner"}
+                    name="banner"
+                    fileType="image/*"
+                    ipfsUrl={banner}
                     onUpload={(url) => {
                       setBanner(url);
                       updateCollection({
                         name,
                         description,
-                        banner_url: url,
                         thumbnail_url: thumbnail,
+                        banner_url: url,
                       });
                     }}
                   />
@@ -234,7 +285,7 @@ export default function EditCollectionView({
         </div>
       </div>
 
-      <div className="mt-10 sm:mt-0">
+      <div className="mt-10 sm:mt-0 mb-10">
         <div className="md:grid md:grid-cols-3 md:gap-6">
           <div className="md:col-span-1">
             <div className="px-4 sm:px-0">
@@ -249,7 +300,9 @@ export default function EditCollectionView({
 
           {collection && (
             <div className="mt-5 md:col-span-2 md:mt-0">
-              <StemList collectionId={collection.id} />
+              <StemList collectionId={collection.id} onLoad={(stems) => {
+                setStems(stems)
+              }}/>
             </div>
           )}
         </div>
@@ -257,246 +310,64 @@ export default function EditCollectionView({
 
       <div className="hidden sm:block" aria-hidden="true">
         <div className="py-5">
-          <div className="border-t border-gray-200" />
+          <div className="border-t border-gray-200 mb-4" />
         </div>
       </div>
-    </div>
-  );
-}
 
-interface ThumbnailUploadProps {
-  uid?: Collection["id"];
-  url: Collection["thumbnail_url"];
-  size: number;
-  onUpload: (url: string) => void;
-}
-
-interface BannerUploadProps {
-  uid?: Collection["id"];
-  url: Collection["banner_url"];
-  size: number;
-  onUpload: (url: string) => void;
-}
-
-function BannerUpload({ uid, url, size, onUpload }: BannerUploadProps) {
-  const { data: session } = useSession();
-  const [supabase] = useState(() =>
-    supabaseBowrserClient({ jwt: session?.supabaseAccessToken })
-  );
-
-  const [banner, setBanner] = useState<Collection["banner_url"]>(null);
-  const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    if (url) downloadImage(url);
-  }, [url]);
-
-  async function downloadImage(path: string) {
-    try {
-      const { data, error } = await supabase.storage
-        .from("banners")
-        .download(path);
-      if (error) {
-        throw error;
-      }
-      const url = URL.createObjectURL(data);
-      setBanner(url);
-    } catch (error) {
-      toast.error("Error downloading image");
-    }
-  }
-
-  const uploadBanner: React.ChangeEventHandler<HTMLInputElement> = async (
-    event
-  ) => {
-    try {
-      setUploading(true);
-
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("You must select an image to upload.");
-      }
-
-      const file = event.target.files[0];
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${uid}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      console.log(fileName, filePath);
-
-      let { error: uploadError } = await supabase.storage
-        .from("banners")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      onUpload(filePath);
-    } catch (error) {
-      toast.error("Error uploading banner");
-      console.log(error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div>
-      <label className="block text-sm font-medium leading-6 text-gray-900">
-        Cover photo
-      </label>
-      <div className="mt-2 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
-        <div className="space-y-1 text-center">
-          {banner ? (
-            <Image
-              src={banner}
-              alt="Avatar"
-              className="h-full w-full text-gray-300"
-              fill
-            />
-          ) : (
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              stroke="currentColor"
-              fill="none"
-              viewBox="0 0 48 48"
-              aria-hidden="true"
-            >
-              <path
-                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
-
-          <div className="flex text-sm text-gray-600">
-            <label
-              htmlFor="file-upload"
-              className="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500"
-            >
-              <span>Upload a file</span>
-              <input
-                id="file-upload"
-                name="file-upload"
-                type="file"
-                className="sr-only"
-                onChange={uploadBanner}
-                disabled={uploading}
-              />
-            </label>
-            <p className="pl-1">or drag and drop</p>
+      <div className="mt-10 sm:mt-0 mb-10">
+        <div className="md:grid md:grid-cols-3 md:gap-6">
+          <div className="md:col-span-1">
+            <div className="px-4 sm:px-0">
+              <h3 className="text-base font-semibold leading-6 text-gray-900">
+                Contract Deployment
+              </h3>
+              <p className="mt-1 text-sm text-gray-600">
+                Generate Metadata and deploy contract.
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function ThumbnailUpload({ uid, url, size, onUpload }: ThumbnailUploadProps) {
-  const { data: session } = useSession();
-  const [supabase] = useState(() =>
-    supabaseBowrserClient({ jwt: session?.supabaseAccessToken })
-  );
+          {collection && (
+            <div className="mt-5 md:col-span-2 md:mt-0">
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-base font-semibold leading-6 text-gray-900">
+                    Generate and Deploy
+                  </h3>
+                  <div className="mt-2 max-w-xl text-sm text-gray-500">
+                    <p>
+                      Generate Metadata and Deploy the STEM Collection Contract.
+                    </p>
+                  </div>
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-gray-00 shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                      onClick={()=> {
+                        generateMetadata(collection, stems!)
+                        console.log(metadata);
+                        
+                      }}
+                    >
+                      Generate
+                    </button>
+                      {metadata && (
+                        <button
+                      type="button"
+                      className="mx-4 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                    >
+                      Deploy
+                    </button>
+                      )}
+                    
+                  </div>
+                </div>
+              </div>
 
-  const [thumbnail, setThumbnail] =
-    useState<Collection["thumbnail_url"]>(null);
-  const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    if (url) downloadImage(url);
-  }, [url]);
-
-  async function downloadImage(path: string) {
-    try {
-      const { data, error } = await supabase.storage
-        .from("thumbnails")
-        .download(path);
-      if (error) {
-        throw error;
-      }
-      const url = URL.createObjectURL(data);
-      setThumbnail(url);
-    } catch (error) {
-      toast.error("Error downloading image");
-    }
-  }
-
-  const uploadThumbnail: React.ChangeEventHandler<HTMLInputElement> = async (
-    event
-  ) => {
-    try {
-      setUploading(true);
-
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("You must select an image to upload.");
-      }
-
-      const file = event.target.files[0];
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${uid}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      console.log(fileName, filePath);
-
-      let { error: uploadError } = await supabase.storage
-        .from("thumbnails")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      onUpload(filePath);
-    } catch (error) {
-      toast.error("Error uploading image");
-      console.log(error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div>
-      <label className="block text-sm font-medium leading-6 text-gray-900">
-        Thumbnail
-      </label>
-      <div className="mt-2 flex items-center">
-        <span className="inline-block h-32 w-32 overflow-hidden rounded-md bg-gray-100">
-          {thumbnail ? (
-            <Image
-              src={thumbnail}
-              alt="Avatar"
-              className="h-full w-full text-gray-300"
-              width={size}
-              height={size}
-            />
-          ) : (
-            <svg
-              className="h-full w-full text-gray-300"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
+             
+            </div>
           )}
-        </span>
-        <label
-          htmlFor="single"
-          className="ml-5 rounded-md border border-gray-300 bg-white py-1.5 px-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50"
-        >
-          {uploading ? "Uploading ..." : "Change"}
-        </label>
-        <input
-          className="hidden absolute"
-          type="file"
-          id="single"
-          accept="image/*"
-          onChange={uploadThumbnail}
-          disabled={uploading}
-        />
+        </div>
       </div>
     </div>
   );

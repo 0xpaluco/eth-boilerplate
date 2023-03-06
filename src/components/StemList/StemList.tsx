@@ -14,27 +14,19 @@ import { resolveIPFS } from "@src/utils/resolveIPFS";
 type Collection = Database["public"]["Tables"]["collections"]["Row"];
 type Stem = Database["public"]["Tables"]["stems"]["Row"];
 
-// type Stem = {
-//   id: number;
-//   name: string;
-//   description: string;
-//   imageHash: string;
-//   audioHash: string;
-//   supply: number;
-//   price: number;
-// };
-
 interface StemListProps {
-  collectionId: Collection['id']
+  collectionId: Collection["id"];
+  onLoad: (stems: Stem[]) => void;
 }
 
-export default function StemList({ collectionId }: StemListProps) {
-    const { data: session } = useSession();
+export default function StemList({ collectionId , onLoad }: StemListProps) {
+  const { data: session } = useSession();
 
-    const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [stems, setStems] = useState<Stem[]>();
-    const [supabase] = useState(() =>
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [stemId, setStemId] = useState<Stem["id"]>();
+  const [stems, setStems] = useState<Stem[]>();
+  const [supabase] = useState(() =>
     supabaseBowrserClient({ jwt: session?.supabaseAccessToken })
   );
 
@@ -51,7 +43,7 @@ export default function StemList({ collectionId }: StemListProps) {
         .from("stems")
         .select(`*`)
         .eq("collection_id", collectionId)
-        .order('token_id', { ascending: true });
+        .order("token_id", { ascending: true });
 
       if (error && status !== 406) {
         throw error;
@@ -59,13 +51,14 @@ export default function StemList({ collectionId }: StemListProps) {
 
       if (data) {
         setStems(data);
+        onLoad(data)
       }
-      
     } catch (error) {
       toast.error("Error loading stems!");
       console.log(error);
     } finally {
       setLoading(false);
+      
     }
   }
 
@@ -86,9 +79,15 @@ export default function StemList({ collectionId }: StemListProps) {
                   </div>
                   <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
                     <div>
-                      <p className="truncate text-sm font-medium text-indigo-600">
+                      <button
+                        className="truncate text-sm font-medium text-indigo-600 hover:underline"
+                        onClick={() => {
+                          setStemId(stem.id);
+                          setOpen(true);
+                        }}
+                      >
                         {`ID: ${stem.token_id} - ${stem.name}`}
-                      </p>
+                      </button>
                       <p className="mt-1 flex items-center text-sm text-gray-500">
                         <span className="line-clamp-2">{stem.description}</span>
                       </p>
@@ -97,7 +96,8 @@ export default function StemList({ collectionId }: StemListProps) {
                       <div>
                         <button
                           className="text-sm text-gray-900 flex hover:text-indigo-500"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
                             console.log("play", stem.name);
                           }}
                         >
@@ -105,7 +105,7 @@ export default function StemList({ collectionId }: StemListProps) {
                             className="h-5 w-5 mr-2 text-indigo-500"
                             aria-hidden="true"
                           />{" "}
-                          Play Sound
+                          Play
                         </button>
                         <p className="mt-2 flex items-center text-sm text-gray-500">
                           {`Supply: ${stem.supply} - Price: ${stem.price}`}
@@ -121,18 +121,30 @@ export default function StemList({ collectionId }: StemListProps) {
         <li key="cta">
           <div className="m-1">
             <button
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                setStemId(undefined);
+                setOpen(true);
+              }}
               className="flex w-full items-center justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline-offset-0"
             >
-              { loading ? "Loading..." : "Add Stem" }
+              {loading ? "Loading..." : "Add Stem"}
             </button>
           </div>
         </li>
       </ul>
-      {open && (
+
+      {open && stemId && (
+        <StemModal
+          open={open}
+          setOpen={setOpen}
+          collectionId={collectionId}
+          stemID={stemId}
+        />
+      )}
+
+      {open && !stemId && (
         <StemModal open={open} setOpen={setOpen} collectionId={collectionId} />
       )}
-      
     </div>
   );
 }

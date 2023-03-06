@@ -1,4 +1,4 @@
-import { Dispatch, Fragment, SetStateAction, useState } from "react";
+import { Dispatch, Fragment, SetStateAction, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
@@ -7,6 +7,7 @@ import supabaseBowrserClient from "@src/utils/supabase-browser";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import { ipfsClient, resolveIPFS } from "@src/utils/resolveIPFS";
+import IPFSUpload from "../IPFSUpload";
 type Collection = Database["public"]["Tables"]["collections"]["Row"];
 type Stem = Database["public"]["Tables"]["stems"]["Row"];
 
@@ -14,9 +15,15 @@ interface ModalProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   collectionId: Collection["id"];
+  stemID?: Stem["id"];
 }
 
-export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
+export default function StemModal({
+  open,
+  setOpen,
+  collectionId,
+  stemID,
+}: ModalProps) {
   const { data: session } = useSession();
 
   const [supabase] = useState(() =>
@@ -33,41 +40,71 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
   const [supply, setSupply] = useState<Stem["supply"]>(null);
   const [price, setPrice] = useState<Stem["price"]>(null);
 
+  const [instrument, setInstrument] = useState<Stem["instrument"]>(null);
+  const [bpm, setBpm] = useState<Stem["bpm"]>(null);
+  const [key, setKey] = useState<Stem["key"]>(null);
+  const [genre, setGenre] = useState<Stem["genre"]>(null);
+  const [license, setLicense] = useState<Stem["license"]>(null);
 
-  const uploadCoverArt: React.ChangeEventHandler<HTMLInputElement> = async (
-    event
-  ) => {
-    if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("You must select an image to upload.");
-      }
-    const file = event.target.files[0]
+
+  useEffect(() => {
+    if (stemID) getStem();
+  }, [stemID]);
+
+  async function getStem() {
     try {
-      const added = await ipfsClient.add(file)
-      const url = `https://infura-ipfs.io/ipfs/${added.path}`
-      setImageHash(url)
-      console.log("IPFS URI: ", url)
+      setLoading(true);
+      if (!session?.user) throw new Error("No user");
+
+      let { data, error, status } = await supabase
+        .from("stems")
+        .select(`*`)
+        .eq("id", stemID)
+        .single();
+
+      if (error && status !== 406) {
+        throw error;
+      }
+
+      if (data) {
+        //setCollection(data);
+        setTokenId(data.token_id);
+        setName(data.name);
+        setDescription(data.description);
+        setImageHash(data.image_hash);
+        setAudioHash(data.audio_hash);
+        setSupply(data.supply);
+        setPrice(data.price);
+        setInstrument(data.instrument)
+        setBpm(data.bpm)
+        setKey(data.key)
+        setGenre(data.genre)
+        setLicense(data.license)
+      }
     } catch (error) {
-      console.log('Error uploading file: ', error)
-    }  
+      toast.error("Error Loading Stem");
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const uploadAudio: React.ChangeEventHandler<HTMLInputElement> = async (
-    event
-  ) => {
-    if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("You must select an image to upload.");
-      }
-    const file = event.target.files[0]
+  async function deleteStem() {
     try {
-      const added = await ipfsClient.add(file)
-      const url = `https://infura-ipfs.io/ipfs/${added.path}`
-      setAudioHash(url)
-      console.log("IPFS URI: ", url)
-    } catch (error) {
-      console.log('Error uploading file: ', error)
-    }  
-  }
+      setLoading(true);
+      if (!session?.user) throw new Error("No user");
 
+      const { error } = await supabase.from("stems").delete().eq("id", stemID);
+      if (error) throw error;
+      toast.success("Stem Deleted!");
+    } catch (error) {
+      console.log(error);
+      toast.error("Some error occured deleting!");
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  }
   async function createStem() {
     try {
       setLoading(true);
@@ -79,6 +116,7 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
       }
 
       const updates = {
+        id: stemID,
         token_id: tokenId,
         collection_id: collectionId,
         name,
@@ -87,23 +125,28 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
         audio_hash: audioHash,
         supply,
         price,
+        instrument,
+        bpm,
+        key,
+        genre,
+        license
       };
 
       let { error, data } = await supabase
         .from("stems")
-        .insert(updates)
+        .upsert(updates)
         .select();
       console.log(data);
       if (error) throw error;
 
       // alert("Collection created!");
-      toast.success("Stem created!");
-      setOpen(false);
+      toast.success("Stem saved!");
     } catch (error) {
       console.log(error);
       toast.error("Some error occured!");
     } finally {
       setLoading(false);
+      setOpen(false);
     }
   }
 
@@ -154,13 +197,33 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                       </Dialog.Title>
                       <div className="mt-2">
                         <p className="text-sm text-gray-500">
-                          Some basic information to get us started.
+                          Fill out the information.
                         </p>
                       </div>
                     </div>
                     <div className="grid w-full grid-cols-1 items-start gap-y-8 gap-x-6 sm:grid-cols-12 lg:gap-x-8">
                       <div className="sm:col-span-4 lg:col-span-5">
-                        <div className="overflow-hidden rounded-lg mt-6">
+                        <IPFSUpload
+                          label={"Cover Art"}
+                          name="cover"
+                          fileType="image/*"
+                          ipfsUrl={imageHash}
+                          onUpload={(url) => {
+                            setImageHash(url);
+                          }}
+                        />
+
+                        <IPFSUpload
+                          label={"Audio"}
+                          name="audio-file"
+                          fileType="audio/*"
+                          ipfsUrl={audioHash}
+                          onUpload={(url) => {
+                            setAudioHash(url);
+                          }}
+                        />
+
+                        {/* <div className="overflow-hidden rounded-lg mt-6">
                           <div>
                             <label className="block text-sm font-medium leading-6 text-gray-900">
                               Cover Art
@@ -204,14 +267,14 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                               </div>
                             </div>
                           </div>
-                          {
-        imageHash && (
-          <div>
-            <img src={resolveIPFS(imageHash)} width="600px" />
-            <a href={resolveIPFS(imageHash)} target="_blank">{resolveIPFS(imageHash)}</a>
-          </div>
-        )
-      }
+                          {imageHash && (
+                            <div>
+                              <img src={resolveIPFS(imageHash)} width="600px" />
+                              <a href={resolveIPFS(imageHash)} target="_blank">
+                                {resolveIPFS(imageHash)}
+                              </a>
+                            </div>
+                          )}
                         </div>
 
                         <div className="overflow-hidden rounded-lg mt-6">
@@ -258,7 +321,7 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
 
                       <div className="sm:col-span-8 lg:col-span-7">
@@ -282,6 +345,7 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       name="id"
                                       id="id"
                                       className="px-2 mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={tokenId || ""}
                                       onChange={(e) =>
                                         setTokenId(parseInt(e.target.value))
                                       }
@@ -300,6 +364,7 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       name="name"
                                       id="name"
                                       className="px-2 mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={name || ""}
                                       onChange={(e) => setName(e.target.value)}
                                     />
                                   </div>
@@ -318,6 +383,7 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       className="mt-1 p-2 block w-full rounded-md border-0 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:py-1.5 sm:text-sm sm:leading-6"
                                       placeholder="A brief description of your STEM audio."
                                       defaultValue={""}
+                                      value={description || ""}
                                       onChange={(e) =>
                                         setDescription(e.target.value)
                                       }
@@ -336,6 +402,7 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       name="price"
                                       id="price"
                                       className="px-2 mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={price || ""}
                                       onChange={(e) =>
                                         setPrice(parseFloat(e.target.value))
                                       }
@@ -354,6 +421,7 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       name="supply"
                                       id="supply"
                                       className="px-2 mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={supply || ""}
                                       onChange={(e) =>
                                         setSupply(parseInt(e.target.value))
                                       }
@@ -372,6 +440,8 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       name="instrument"
                                       id="instrument"
                                       className="px-2 mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={instrument || ""}
+                                      onChange={(e) => setInstrument(e.target.value)}
                                     />
                                   </div>
 
@@ -387,6 +457,8 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       name="bpm"
                                       id="bpm"
                                       className="px-2 mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={bpm || ""}
+                                      onChange={(e) => setBpm(parseInt(e.target.value))}
                                     />
                                   </div>
 
@@ -402,6 +474,8 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       name="key"
                                       id="pkey"
                                       className="px-2 mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={key || ""}
+                                      onChange={(e) => setKey(e.target.value)}
                                     />
                                   </div>
 
@@ -417,6 +491,8 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       name="genre"
                                       id="genre"
                                       className="px-2 mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={genre || ""}
+                                      onChange={(e) => setGenre(e.target.value)}
                                     />
                                   </div>
 
@@ -431,6 +507,8 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                       id="license"
                                       name="license"
                                       className="px-2 mt-2 block w-full rounded-md border-0 bg-white py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                      value={license || ""}
+                                      onChange={(e) => setLicense(e.target.value)}
                                     >
                                       <option>Open Source</option>
                                       <option>Paid</option>
@@ -459,6 +537,17 @@ export default function StemModal({ open, setOpen, collectionId }: ModalProps) {
                                 </div>
                               </div>
                               <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
+                                {stemID && (
+                                  <button
+                                    type="submit"
+                                    className="mr-4 inline-flex justify-center rounded-md bg-red-400 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                                    onClick={() => deleteStem()}
+                                    disabled={loading}
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+
                                 <button
                                   type="submit"
                                   className="inline-flex justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"

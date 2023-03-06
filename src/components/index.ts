@@ -1,6 +1,7 @@
 export { default as CollectionGrid } from './CollectionGrid';
 export { default as CollectionList } from './CollectionList';
 export { default as CreateModal } from './CreateModal';
+export { default as IPFSUpload } from './IPFSUpload';
 export { default as NftDetail } from './NftDetail';
 export { default as NftGrid } from './NftGrid';
 export { default as ProfileTabs } from './ProfileTabs';

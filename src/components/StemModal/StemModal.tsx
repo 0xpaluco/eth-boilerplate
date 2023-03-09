@@ -136,7 +136,7 @@ export default function StemModal({
         .from("stems")
         .upsert(updates)
         .select();
-      console.log(data);
+
       if (error) throw error;
 
       // alert("Collection created!");
@@ -223,105 +223,7 @@ export default function StemModal({
                           }}
                         />
 
-                        {/* <div className="overflow-hidden rounded-lg mt-6">
-                          <div>
-                            <label className="block text-sm font-medium leading-6 text-gray-900">
-                              Cover Art
-                            </label>
-                            <div className="mt-2 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
-                              <div className="space-y-5 text-center">
-                                <svg
-                                  className="mx-auto h-12 w-12 text-gray-400"
-                                  stroke="currentColor"
-                                  fill="none"
-                                  viewBox="0 0 48 48"
-                                  aria-hidden="true"
-                                >
-                                  <path
-                                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                                <div className="flex text-sm text-gray-600">
-                                  <label
-                                    htmlFor="cover-art"
-                                    className="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500"
-                                  >
-                                    <span>Upload a file</span>
-                                    <input
-                                      id="cover-art"
-                                      name="cover-art"
-                                      accept="image/*"
-                                      type="file"
-                                      className="sr-only"
-                                      onChange={uploadCoverArt}
-                                    />
-                                  </label>
-                                  <p className="pl-1">or drag and drop</p>
-                                </div>
-                                <p className="text-xs text-gray-500">
-                                  PNG, JPG, GIF up to 10MB
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          {imageHash && (
-                            <div>
-                              <img src={resolveIPFS(imageHash)} width="600px" />
-                              <a href={resolveIPFS(imageHash)} target="_blank">
-                                {resolveIPFS(imageHash)}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="overflow-hidden rounded-lg mt-6">
-                          <div>
-                            <label className="block text-sm font-medium leading-6 text-gray-900">
-                              Audio
-                            </label>
-                            <div className="mt-2 flex justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6">
-                              <div className="space-y-5 text-center">
-                                <svg
-                                  className="mx-auto h-12 w-12 text-gray-400"
-                                  stroke="currentColor"
-                                  fill="none"
-                                  viewBox="0 0 48 48"
-                                  aria-hidden="true"
-                                >
-                                  <path
-                                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                                <div className="flex text-sm text-gray-600">
-                                  <label
-                                    htmlFor="audio-upload"
-                                    className="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500"
-                                  >
-                                    <span>Upload a file</span>
-                                    <input
-                                      id="audio-upload"
-                                      name="audio-upload"
-                                      accept="audio/*"
-                                      type="file"
-                                      className="sr-only"
-                                      onChange={uploadAudio}
-                                    />
-                                  </label>
-                                  <p className="pl-1">or drag and drop</p>
-                                </div>
-                                <p className="text-xs text-gray-500">
-                                  MP3, WAV up to 50MB
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div> */}
+                       
                       </div>
 
                       <div className="sm:col-span-8 lg:col-span-7">
@@ -507,7 +409,7 @@ export default function StemModal({
                                       id="license"
                                       name="license"
                                       className="px-2 mt-2 block w-full rounded-md border-0 bg-white py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                      value={license || ""}
+                                      value={license || "Open Source"}
                                       onChange={(e) => setLicense(e.target.value)}
                                     >
                                       <option>Open Source</option>

@@ -11,15 +11,15 @@ import supabaseBowrserClient from "@src/utils/supabase-browser";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import { resolveIPFS } from "@src/utils/resolveIPFS";
+import Image from "next/image";
 type Collection = Database["public"]["Tables"]["collections"]["Row"];
 type Stem = Database["public"]["Tables"]["stems"]["Row"];
 
 interface StemListProps {
   collectionId: Collection["id"];
-  onLoad: (stems: Stem[]) => void;
 }
 
-export default function StemList({ collectionId , onLoad }: StemListProps) {
+export default function StemList({ collectionId }: StemListProps) {
   const { data: session } = useSession();
 
   const [open, setOpen] = useState(false);
@@ -51,7 +51,6 @@ export default function StemList({ collectionId , onLoad }: StemListProps) {
 
       if (data) {
         setStems(data);
-        onLoad(data)
       }
     } catch (error) {
       toast.error("Error loading stems!");
@@ -71,10 +70,12 @@ export default function StemList({ collectionId , onLoad }: StemListProps) {
               <div className="flex items-center px-4 py-4 sm:px-6">
                 <div className="flex min-w-0 flex-1 items-center">
                   <div className="flex-shrink-0">
-                    <img
+                    <Image
                       className="h-12 w-12 rounded-lg"
-                      src={stem.image_hash ? resolveIPFS(stem.image_hash) : ""}
+                      src={stem.image_hash ? resolveIPFS(stem.image_hash)! : ""}
                       alt=""
+                      width={48}
+                      height={48}
                     />
                   </div>
                   <div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">

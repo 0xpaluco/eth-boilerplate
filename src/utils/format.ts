@@ -25,3 +25,16 @@ export const getAddressInitials = (str?: string, n = 4) => {
   }
   return '';
 };
+
+/**
+* Returns tx url"
+* @param {string} hash tx hash
+* @returns {string}
+*/
+export const getTXUrl = (hash?: string) => {
+  if (hash) {
+    return `https://mumbai.polygonscan.com/tx/${hash}`;
+  }
+  return '';
+};
+

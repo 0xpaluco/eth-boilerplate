@@ -8,6 +8,13 @@ export const resolveIPFS = (url?: string) => {
   return url.replace('ipfs://', 'https://gateway.ipfs.io/ipfs/');
 };
 
+export const cleanBaseUri = (url?: string, item?: string) => {
+  if (!url || !item || !url.includes(item, (url.length - item.length)) ) {
+    return url;
+  }
+  return url.replace(item, '');
+};
+
 export const ipfsClient = () => {
 
   const auth = 'Basic ' + Buffer.from(process.env.NEXT_PUBLIC_INFURA_PROJECT_ID + ':' + process.env.NEXT_PUBLIC_INFURA_KEY_SECRET).toString('base64')

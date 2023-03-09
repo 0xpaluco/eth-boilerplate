@@ -5,9 +5,8 @@ import { useEffect, useState } from "react";
 import { Database } from "@lib/database.types";
 import { toast } from "react-hot-toast";
 import { kebabCase } from "lodash";
-import { IPFSUpload, StemList } from "@src/components";
+import { CollectionDeployer, IPFSUpload, StemList } from "@src/components";
 type Collection = Database["public"]["Tables"]["collections"]["Row"];
-type Stem = Database["public"]["Tables"]["stems"]["Row"];
 
 interface EditCollectionViewProps {
   collectionId?: string | string[];
@@ -31,11 +30,8 @@ export default function EditCollectionView({
   const [banner, setBanner] = useState<Collection["banner_url"]>(null);
   const [draft, setDraft] = useState<Collection["draft"]>();
 
-  const [stems, setStems] = useState<Stem[]>();
   useEffect(() => {
-    getCollection();
-    console.log(collectionId);
-    console.log(session?.user_id);
+    if (collectionId) getCollection();
   }, [collectionId]);
 
   async function getCollection() {
@@ -110,54 +106,6 @@ export default function EditCollectionView({
     } finally {
       setLoading(false);
     }
-  }
-
-  const [metadata, setMetadata] = useState<any[]>();
-  
-  async function generateMetadata(_collection: Collection, _stems: Stem[]) {
-    const abi: any[] = new Array<any>()
-    const meta = { path: "metadata.json", content: { name: _collection.name, description: _collection.description, image: _collection.thumbnail_url } }
-    abi.push(meta)
-
-    console.log(_stems.length);
-    
-    for (let i = 0; i < _stems.length; i++) {
-      const stem = _stems[i];
-      let stemMeta = {
-        path: `${stem.token_id}.json`,
-        content: {
-          id: stem.token_id,
-          name: stem.name,
-          description: stem.description,
-          image: stem.image_hash,
-          animation_url: stem.audio_hash,
-          attributes: [
-            {
-              "trait_type": "Instrument",
-              "value": stem.instrument
-            },
-            {
-              "trait_type": "BPM",
-              "value": stem.bpm
-            },
-            {
-              "trait_type": "Key",
-              "value": stem.key
-            },
-            {
-              "trait_type": "Genre",
-              "value": stem.genre
-            },
-            {
-              "trait_type": "License",
-              "value": stem.license
-            }
-          ]
-        }
-      }
-      abi.push(stemMeta)
-    }
-    setMetadata(abi)
   }
 
   return (
@@ -285,6 +233,7 @@ export default function EditCollectionView({
         </div>
       </div>
 
+      {/** Stem List Section */}
       <div className="mt-10 sm:mt-0 mb-10">
         <div className="md:grid md:grid-cols-3 md:gap-6">
           <div className="md:col-span-1">
@@ -300,9 +249,7 @@ export default function EditCollectionView({
 
           {collection && (
             <div className="mt-5 md:col-span-2 md:mt-0">
-              <StemList collectionId={collection.id} onLoad={(stems) => {
-                setStems(stems)
-              }}/>
+              <StemList collectionId={collection.id} />
             </div>
           )}
         </div>
@@ -314,6 +261,7 @@ export default function EditCollectionView({
         </div>
       </div>
 
+      {/** Metadata - Deploy Section */}
       <div className="mt-10 sm:mt-0 mb-10">
         <div className="md:grid md:grid-cols-3 md:gap-6">
           <div className="md:col-span-1">
@@ -327,46 +275,15 @@ export default function EditCollectionView({
             </div>
           </div>
 
-          {collection && (
-            <div className="mt-5 md:col-span-2 md:mt-0">
-              <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-base font-semibold leading-6 text-gray-900">
-                    Generate and Deploy
-                  </h3>
-                  <div className="mt-2 max-w-xl text-sm text-gray-500">
-                    <p>
-                      Generate Metadata and Deploy the STEM Collection Contract.
-                    </p>
-                  </div>
-                  <div className="mt-5">
-                    <button
-                      type="button"
-                      className="inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold text-gray-00 shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                      onClick={()=> {
-                        generateMetadata(collection, stems!)
-                        console.log(metadata);
-                        
-                      }}
-                    >
-                      Generate
-                    </button>
-                      {metadata && (
-                        <button
-                      type="button"
-                      className="mx-4 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                    >
-                      Deploy
-                    </button>
-                      )}
-                    
-                  </div>
-                </div>
-              </div>
+          {collection && <div className="mt-5 md:col-span-2 md:mt-0">
+            <CollectionDeployer collectionId={collection.id} />
+            </div>}
+        </div>
+      </div>
 
-             
-            </div>
-          )}
+      <div className="hidden sm:block" aria-hidden="true">
+        <div className="py-5">
+          <div className="border-t border-gray-200 mb-4" />
         </div>
       </div>
     </div>

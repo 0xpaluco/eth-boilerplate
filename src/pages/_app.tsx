@@ -66,6 +66,7 @@ export default function App({
             enabled={false}
           >
             <RainbowKitProvider
+              showRecentTransactions={true}
               chains={chains}
               modalSize="compact"
               theme={lightTheme()}
@@ -79,7 +80,7 @@ export default function App({
           </RainbowKitSiweNextAuthProvider>
         </SessionProvider>
       </WagmiConfig>
-      <Toaster />
+      <Toaster position="top-right" />
     </>
   );
 }
